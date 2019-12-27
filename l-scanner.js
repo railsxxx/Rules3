@@ -72,7 +72,12 @@ function scanToken() {
   let c = advance();
   switch (c) {
     case '(': addToken("LEFT_PAREN"); break;
-    case ')': addToken("RIGHT_PAREN"); break;
+    case ')': addToken("RIGHT_PAREN");
+      // insert '*' between ')' and digit, indentifier or '('
+      if (isDigit(peek())) addToken("STAR", null, "*");
+      if (isAlpha(peek())) addToken("STAR", null, "*");
+      if (peek() == '(') addToken("STAR", null, "*");
+      break;
     case '{': addToken("LEFT_BRACE"); break;
     case '}': addToken("RIGHT_BRACE"); break;
     case ',': addToken("COMMA"); break;
@@ -106,8 +111,14 @@ function scanToken() {
     default:
       if (isDigit(c)) {
         number();
+        // insert '*' between digit and indentifier or '('
+        if (isAlpha(peek())) addToken("STAR", null, "*");
+        if (peek() == '(') addToken("STAR", null, "*");
       } else if (isAlpha(c)) {
         identifier();
+        // insert '*' between alpha and digit or '('
+        if (isDigit(peek())) addToken("STAR", null, "*");
+        if (peek() == '(') addToken("STAR", null, "*");
       } else {
         error(line, "Unexpected character '" + c + "' at position: " + current);
       }
@@ -180,12 +191,10 @@ function number() {
     while (isDigit(peek())) advance();
   }
   addToken("NUMBER", parseFloat(source.substring(start, current)));
-  // insert '*' between digit and indentifier or '('
-  if (isAlpha(peek())) addToken("STAR", null, "*");
-  if (peek()== '(') addToken("STAR", null, "*");
 }
 function identifier() {
-  while (isAlphaNumeric(peek())) advance();
+  //while (isAlphaNumeric(peek())) advance();
+  while (isAlpha(peek())) advance();
   // See if the identifier is a reserved word.   
   let text = source.substring(start, current);
   // is keyword?
@@ -195,9 +204,6 @@ function identifier() {
   else
     type = "IDENTIFIER"
   addToken(type);
-  // insert '*' between alpha and digit or '('
-  if (isDigit(peek())) addToken("STAR", null, "*");
-  if (peek()== '(') addToken("STAR", null, "*");
 }
 function blockComment() {
   while (peek() != '*' && !isAtEnd()) {
