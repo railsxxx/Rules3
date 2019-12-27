@@ -14,17 +14,32 @@ const Interpreter = ip.interpreter;
 
 // Lox console ###############################################
 function Lox() {
-  //let source = '2x+3x';
-  let source = 'x2+3x';
-  console.log(source);
+  let printer;
 
+  //let source = '2x+3x';
+  let source = '2x+3x';
+  console.log(source);
   let sourceTokens = Scanner(source);
-  //console.log(tokens);
+  //console.log(sourceTokens);
   let sourceExpression = Parser(sourceTokens);
   if (!sourceExpression) return;
-
-  const printer = new AstPrinter();
+  printer = new AstPrinter();
   console.log(printer.print(sourceExpression));
+
+  let rule = {
+    //pattern: ['a*c+b*c', 'c*a+b*c', 'a*c+c*b', 'c*a+c*b'],
+    pattern: 'a*c+b*c',
+    rewrite: '(a+b)*c'
+  }
+  console.log(rule);
+  let patternTokens = Scanner(rule.pattern);
+  //console.log(patternTokens);
+  let patternExpression = Parser(patternTokens);
+  if (!patternExpression) return;
+  printer = new AstPrinter();
+  console.log(printer.print(patternExpression));
+
+
 
   // const interpreter = new Interpreter();
   // const value = interpreter.interpret(expression);
