@@ -14,21 +14,21 @@ const Interpreter = ip.interpreter;
 
 // Lox console ###############################################
 function Lox() {
-  let source = '2*3/-x';
+  //let source = '2x+3x';
+  let source = 'x2+3x';
   console.log(source);
 
-  let tokens = Scanner(source);
+  let sourceTokens = Scanner(source);
   //console.log(tokens);
-
-  let expression = Parser(tokens);
-  if (!expression) return;
+  let sourceExpression = Parser(sourceTokens);
+  if (!sourceExpression) return;
 
   const printer = new AstPrinter();
-  console.log(printer.print(expression));
+  console.log(printer.print(sourceExpression));
 
-  const interpreter = new Interpreter();
-  const value = interpreter.interpret(expression);
-  if(value) console.log(value);
+  // const interpreter = new Interpreter();
+  // const value = interpreter.interpret(expression);
+  // if (value) console.log(value);
 }
 
 // exports ###################################################

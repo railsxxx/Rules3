@@ -84,7 +84,7 @@ function Interpreter() {
     return null;
   }
   this.visitVariableExpr = function(expr) {
-    environment[expr.name.lexeme] = 1;
+    environment[expr.name.lexeme] = 2;
     return environment[expr.name.lexeme];
   }
 }

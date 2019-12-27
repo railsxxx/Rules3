@@ -54,7 +54,6 @@ function Scanner(strSource) {
   tokens.push(new Token("EOF", "", null, current + 1, line))
   return tokens
 }
-
 // scanner variables
 let source = ""
 let tokens = []
@@ -62,7 +61,6 @@ let start = 0;
 let current = 0;
 let line = 1;
 
-// scanner utilites
 function scanTokens() {
   while (!isAtEnd()) {
     // We are at the beginning of the next lexeme.
@@ -70,7 +68,6 @@ function scanTokens() {
     scanToken();
   }
 }
-
 function scanToken() {
   let c = advance();
   switch (c) {
@@ -117,104 +114,91 @@ function scanToken() {
       break;
   }
 }
-
+// scanner utilites ###############################
 function isAtEnd() {
   return current >= source.length;
 }
-
 function isDigit(c) {
   return c >= '0' && c <= '9';
 }
-
 function isAlpha(c) {
   return (c >= 'a' && c <= 'z') ||
     (c >= 'A' && c <= 'Z') ||
     c == '_';
 }
-
 function isAlphaNumeric(c) {
   return isAlpha(c) || isDigit(c);
 }
-
 function advance() {
   current++;
   return source.charAt(current - 1);
 }
-
 function peek() {
   if (isAtEnd()) return '\0';
   return source.charAt(current);
 }
-
 function peekNext() {
   if (current + 1 >= source.length) return '\0';
   return source.charAt(current + 1);
 }
-
 function match(expected) {
   if (isAtEnd()) return false;
-  if (source.charAt(current) != expected) return false;
-
+  if (source.charAt(current) != expected)
+    return false;
   current++;
   return true;
 }
-
-function addToken(type) {
-  addToken(type, null);
-}
-
-function addToken(type, literal) {
-  let text = source.substring(start, current);
+function addToken(type, literal, text) {
+  if (typeof text === "undefined")
+    text = source.substring(start, current);
+  if (typeof literal === "undefined")
+    literal = null;
   tokens.push(new Token(type, text, literal, current, line));
 }
-
 function string() {
   while (peek() != '"' && !isAtEnd()) {
     if (peek() == '\n') line++;
     advance();
   }
-
-  // Unterminated string.                              
+  // Unterminated string.                            
   if (isAtEnd()) {
     error(line, "Unterminated string.");
     return;
   }
-
   // The closing "."
   advance();
-
-  // Trim the surrounding quotes.                      
+  // Trim the surrounding quotes.                    
   let value = source.substring(start + 1, current - 1);
   addToken("STRING", value);
 }
-
 function number() {
   while (isDigit(peek())) advance();
-
-  // Look for a fractional part.                       
+  // Look for a fractional part.                     
   if (peek() == '.' && isDigit(peekNext())) {
     // Consume the "."    
     advance();
-
     while (isDigit(peek())) advance();
   }
-
   addToken("NUMBER", parseFloat(source.substring(start, current)));
+  // insert '*' between digit and indentifier or '('
+  if (isAlpha(peek())) addToken("STAR", null, "*");
+  if (peek()== '(') addToken("STAR", null, "*");
 }
-
 function identifier() {
   while (isAlphaNumeric(peek())) advance();
   // See if the identifier is a reserved word.   
   let text = source.substring(start, current);
-
+  // is keyword?
   let type = ""
   if (keywords.includes(text))
     type = text.toUpperCase()
   else
     type = "IDENTIFIER"
   addToken(type);
+  // insert '*' between alpha and digit or '('
+  if (isDigit(peek())) addToken("STAR", null, "*");
+  if (peek()== '(') addToken("STAR", null, "*");
 }
-
 function blockComment() {
   while (peek() != '*' && !isAtEnd()) {
     if (peek() == '\n') line++;
@@ -240,11 +224,9 @@ function blockComment() {
   // Continue block comment
   blockComment();
 }
-
 function error(line, message) {
   console.log("line " + line + ": " + message)
 }
-
 //ScannerTest ##############################################
 function ScannerTest() {
 
