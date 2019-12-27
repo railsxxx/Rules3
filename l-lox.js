@@ -12,6 +12,9 @@ const AstPrinter = ast.astPrinter;
 const ip = require("./l-interpreter.js");
 const Interpreter = ip.interpreter;
 
+const rm = require("./l-ruleMatcher.js");
+const RuleMatcher = rm.rulematcher
+
 // Lox console ###############################################
 function Lox() {
   let printer;
@@ -28,18 +31,19 @@ function Lox() {
 
   let rule = {
     //pattern: ['a*c+b*c', 'c*a+b*c', 'a*c+c*b', 'c*a+c*b'],
-    pattern: 'a*c+b*c',
+    pattern: ['a*c+b*c'],
     rewrite: '(a+b)*c'
   }
   console.log(rule);
-  let patternTokens = Scanner(rule.pattern);
+  let patternTokens = Scanner(rule.pattern[0]);
   //console.log(patternTokens);
   let patternExpression = Parser(patternTokens);
+  rule.patternExpression = patternExpression;
   if (!patternExpression) return;
   printer = new AstPrinter();
   console.log(printer.print(patternExpression));
 
-
+  RuleMatcher(sourceExpression, rule);
 
   // const interpreter = new Interpreter();
   // const value = interpreter.interpret(expression);
