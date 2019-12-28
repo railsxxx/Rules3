@@ -45,7 +45,7 @@ function Parser(arrTokens) {
     while (match("BANG_EQUAL", "EQUAL_EQUAL")) {
       operator = previous();
       right = comparison();
-      expr = new Binary(expr, operator, right);
+      expr = new Binary(operator, expr, right);
     }
     return expr;
   }
@@ -57,33 +57,28 @@ function Parser(arrTokens) {
     while (match("GREATER", "GREATER_EQUAL", "LESS", "LESS_EQUAL")) {
       operator = previous();
       right = addition();
-      expr = new Binary(expr, operator, right);
+      expr = new Binary(operator, expr, right);
     }
     return expr;
   }
+
   function addition() {
     let expr = multiplication();
-
-    let operator = null;
-    let right = null;
-    while (match("MINUS", "PLUS")) {
-      operator = previous();
-      right = multiplication();
-      expr = new Binary(expr, operator, right);
-    }
-    return expr;
+    return matchType(expr, multiplication, "MINUS", "PLUS");
   }
+
   function multiplication() {
     let expr = unary();
 
-    let operator = null;
-    let right = null;
-    while (match("SLASH", "STAR")) {
-      operator = previous();
-      right = unary();
-      expr = new Binary(expr, operator, right);
-    }
-    return expr;
+    // let operator = null;
+    // let right = null;
+    // while (match("SLASH", "STAR")) {
+    //   operator = previous();
+    //   right = unary();
+    //   expr = new Binary(operator, expr, right);
+    // }
+    // return expr;
+    return matchType(expr, unary, "SLASH", "STAR");
   }
   function unary() {
     if (match("BANG", "MINUS")) {
@@ -116,6 +111,30 @@ function Parser(arrTokens) {
     throw error(peek(), "Expect expression.");
   }
   // parser utilites #####################################
+  function matchType(expr, operation, ...types) {
+    let operator = null;
+    let ops;
+    while (match.apply(null, types)) {
+      if (!operator) {
+        operator = previous();
+        ops = [null, operator, expr];
+        ops.push(operation());
+      }
+      else {
+        if (operator.type == previous().type)
+          ops.push(operation());
+        else {
+          expr = new (Function.prototype.bind.apply(Binary, ops));
+          operator = previous();
+          ops = [null, operator, expr];
+          ops.push(operation());
+        }
+      }
+    }
+    if (operator)
+      return new (Function.prototype.bind.apply(Binary, ops));
+    return expr;
+  }
   function match(...types) {
     for (type of types) {
       if (check(type)) {
@@ -167,7 +186,9 @@ function ParseError() {
 }
 // ParserTest #############################################
 function ParserTest() {
-  let source = '1+3+(12+3)*-45.67';
+  let source = '1+2+3+4-5-6-7';
+  // let source = '1*2*3*4/5/6/7';
+  //let source = '1<2<3<4>5>6>7'
   console.log(source);
 
   let tokens = Scanner(source);

@@ -9,18 +9,18 @@ Literal.prototype.accept = function(operation) {
   return operation.visitLiteralExpr(this);
 }
 // Unary ######################################################
-function Unary(operator, right) {
+function Unary(operator, operand) {
   this.operator = operator;
-  this.right = right;
+  this.operand = operand;
 }
 Unary.prototype.accept = function(operation) {
   return operation.visitUnaryExpr(this);
 }
 // Binary #####################################################
-function Binary(left, operator, right) {
-  this.left = left;           // Expression
+//function Binary(left, operator, right) {
+function Binary(operator, ...operands) {
   this.operator = operator;   // Token
-  this.right = right;         // Expression
+  this.operands = operands;   // Array of Expressions
 }
 Binary.prototype.accept = function(operation) {
   return operation.visitBinaryExpr(this);
@@ -59,10 +59,11 @@ function AstPrinter() {
     return expr.value;
   }
   this.visitUnaryExpr = function(expr) {
-    return parenthesize(expr.operator.lexeme, expr.right);
+    return parenthesize(expr.operator.lexeme, expr.operand);
   }
   this.visitBinaryExpr = function(expr) {
-    return parenthesize(expr.operator.lexeme, expr.left, expr.right);
+    const args = [expr.operator.lexeme].concat(expr.operands);
+    return parenthesize.apply(null, args);
   }
   this.visitGroupingExpr = function(expr) {
     return parenthesize("group", expr.expression);
@@ -78,11 +79,11 @@ const Token = sc.token;
 
 function AstTest() {
   const expression = new Binary(
+    new Token("PLUS", "+", null, 1),
     new Unary(
       new Token("MINUS", "-", null, 1),
       new Literal(123)
     ),
-    new Token("PLUS", "+", null, 1),
     new Grouping(
       new Literal(45.67)
     )

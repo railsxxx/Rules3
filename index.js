@@ -17,11 +17,11 @@ function hello(){
 // const ast = require ("./l-ast.js")
 // ast.astTest();
 
-// const par = require("./l-parser.js");
-// par.parserTest();
+const par = require("./l-parser.js");
+par.parserTest();
 
-const lox = require("./l-lox.js");
-lox.lox();
+// const lox = require("./l-lox.js");
+// lox.lox();
 
 // const pm = require("./x-patMatcher.js");
 // pm.patmatchertest();

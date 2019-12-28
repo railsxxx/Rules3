@@ -49,8 +49,9 @@ function Interpreter() {
     return null;
   }
   this.visitBinaryExpr = function(expr) {
-    let left = evaluate(expr.left);
-    let right = evaluate(expr.right);
+    let left = evaluate(expr.operands[0]);
+    let right = evaluate(expr.operands[1]);
+    const args = [expr.operator].concat(expr.operands);
     switch (expr.operator.type) {
       case "GREATER":
         checkNumberOperands(expr.operator, left, right);
@@ -70,6 +71,7 @@ function Interpreter() {
       case "PLUS":
         checkNumberOperands(expr.operator, left, right);
         return left + right;
+        //return evalPLUS.apply(this, args);
       case "SLASH":
         checkNumberOperands(expr.operator, left, right);
         return left / right;
@@ -86,6 +88,18 @@ function Interpreter() {
   this.visitVariableExpr = function(expr) {
     environment[expr.name.lexeme] = 2;
     return environment[expr.name.lexeme];
+  }
+  // visitor functions utilities ############################
+  function evalPLUS(operator, ...operands) {
+    let sum = 0;
+    let symbols = [];
+    for (let i = 0; i < operands.length; i++) {
+      if (typeof operand[i] == "number")
+        sum += operands[i];
+      else
+        symbols.push(operands[i]);
+    }
+    return [new Literal(sum)].concat(symbols);
   }
 }
 // runtime error ############################################
