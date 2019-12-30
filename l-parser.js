@@ -2,7 +2,7 @@
 
 const sc = require("./l-scanner.js")
 const Scanner = sc.scanner;
-//const Token = sc.token;
+const Token = sc.token;
 
 const ast = require("./l-ast.js")
 const Binary = ast.binary;
@@ -64,21 +64,12 @@ function Parser(arrTokens) {
 
   function addition() {
     let expr = multiplication();
-    return matchType(expr, multiplication, "MINUS", "PLUS");
+    return matchPlusMinus(expr, "PLUS", "MINUS");
   }
 
   function multiplication() {
     let expr = unary();
-
-    // let operator = null;
-    // let right = null;
-    // while (match("SLASH", "STAR")) {
-    //   operator = previous();
-    //   right = unary();
-    //   expr = new Binary(operator, expr, right);
-    // }
-    // return expr;
-    return matchType(expr, unary, "SLASH", "STAR");
+    return matchStarSlash(expr, "STAR", "SLASH");
   }
   function unary() {
     if (match("BANG", "MINUS")) {
@@ -111,24 +102,43 @@ function Parser(arrTokens) {
     throw error(peek(), "Expect expression.");
   }
   // parser utilites #####################################
-  function matchType(expr, operation, ...types) {
+  function matchPlusMinus(expr, ...types) {
     let operator = null;
     let ops;
     while (match.apply(null, types)) {
       if (!operator) {
         operator = previous();
-        ops = [null, operator, expr];
-        ops.push(operation());
+        let plus = new Token("PLUS", "+", null, operator.position, operator.line);
+        ops = [null, plus, expr];
       }
-      else {
-        if (operator.type == previous().type)
-          ops.push(operation());
-        else {
-          expr = new (Function.prototype.bind.apply(Binary, ops));
-          operator = previous();
-          ops = [null, operator, expr];
-          ops.push(operation());
-        }
+      operator = previous();
+      if (operator.type == "PLUS") {
+        ops.push(multiplication());
+      }
+      if (operator.type == "MINUS") {
+        ops.push(new Unary(operator, multiplication()));
+      }
+    }
+    if (operator)
+      return new (Function.prototype.bind.apply(Binary, ops));
+    return expr;
+  }
+  function matchStarSlash(expr, ...types) {
+    let operator = null;
+    let ops;
+    while (match.apply(null, types)) {
+      if (!operator) {
+        operator = previous();
+        let star = new Token("STAR", "*", null, operator.position, operator.line);
+        ops = [null, star, expr];
+      }
+      operator = previous();
+      if (operator.type == "STAR") {
+        ops.push(unary());
+      }
+      if (operator.type == "SLASH") {
+        let one = new Literal(1);
+        ops.push(new Binary(operator, one, unary()));
       }
     }
     if (operator)

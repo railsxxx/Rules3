@@ -23,7 +23,7 @@ function Lox() {
   //let source = '2x+3x';
   //let source = '1+2+(4+5+x)+3';
   //let source = '1-2-(4-5)-x-3';
-  let source = 'x-3';
+  let source = 'x*-2/3*(4+5)/(6-4)';
 
   console.log(source);
   let sourceTokens = Scanner(source);
