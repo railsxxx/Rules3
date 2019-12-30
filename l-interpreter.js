@@ -1,9 +1,30 @@
 //http://craftinginterpreters.com/evaluating-expressions.html
 
+const ast = require("./l-ast.js")
+const Binary = ast.binary;
+const Literal = ast.literal;
+const Unary = ast.unary;
+const Grouping = ast.grouping;
+const Variable = ast.variable;
+
+const sc = require("./l-scanner.js")
+//const Scanner = sc.scanner;
+const Token = sc.token;
+
 // Interpreter ###############################################
 function Interpreter() {
   const self = this;
   const environment = {};
+  this.interpret = function(expression) {
+    try {
+      let value = evaluate(expression);
+      return value;
+    }
+    catch (error) {
+      console.log(error);
+      return null;
+    }
+  }
   function evaluate(expr) {
     return expr.accept(self);
   }
@@ -19,16 +40,6 @@ function Interpreter() {
     if (left == null) return false;
     return left == right;
   }
-  this.interpret = function(expression) {
-    try {
-      let value = evaluate(expression);
-      return value;
-    }
-    catch (error) {
-      console.log(error);
-      return null;
-    }
-  }
   // visitor functions #######################################
   this.visitLiteralExpr = function(expr) {
     return expr.value;
@@ -37,13 +48,13 @@ function Interpreter() {
     return evaluate(expr.expression);
   }
   this.visitUnaryExpr = function(expr) {
-    let right = evaluate(expr.right);
+    let operand = evaluate(expr.operand);
     switch (expr.operator.type) {
       case "BANG":
-        return !isTruthy(right);
+        return !isTruthy(operand);
       case "MINUS":
-        checkNumberOperand(expr.operator, right);
-        return -right;
+        checkNumberOperand(expr.operator, operand);
+        return -operand;
     }
     // Unreachable.                              
     return null;
@@ -66,18 +77,25 @@ function Interpreter() {
         checkNumberOperands(expr.operator, left, right);
         return left <= right;
       case "MINUS":
-        checkNumberOperands(expr.operator, left, right);
-        return left - right;
+        // checkNumberOperands(expr.operator, left, right);
+        // return left - right;
+        return evalOperation.apply(this,
+          [(a, b) => a - b].concat(args));
       case "PLUS":
-        checkNumberOperands(expr.operator, left, right);
-        return left + right;
-        //return evalPLUS.apply(this, args);
+        // checkNumberOperands(expr.operator, left, right);
+        // return left + right;
+        return evalOperation.apply(this,
+          [(a, b) => a + b].concat(args));
       case "SLASH":
-        checkNumberOperands(expr.operator, left, right);
-        return left / right;
+        // checkNumberOperands(expr.operator, left, right);
+        // return left / right;
+        return evalOperation.apply(this,
+          [(a, b) => a / b].concat(args));
       case "STAR":
-        checkNumberOperands(expr.operator, left, right);
-        return left * right;
+        // checkNumberOperands(expr.operator, left, right);
+        // return left * right;
+        return evalOperation.apply(this,
+          [(a, b) => a * b].concat(args));
       case "PLUS": return String(left + right);
       case "BANG_EQUAL": return !isEqual(left, right);
       case "EQUAL_EQUAL": return isEqual(left, right);
@@ -86,20 +104,40 @@ function Interpreter() {
     return null;
   }
   this.visitVariableExpr = function(expr) {
-    environment[expr.name.lexeme] = 2;
+    //environment[expr.name.lexeme] = 2;
     return environment[expr.name.lexeme];
   }
   // visitor functions utilities ############################
-  function evalPLUS(operator, ...operands) {
-    let sum = 0;
+  function evalOperation(operation, operator, ...operands) {
+    let total, result;
     let symbols = [];
     for (let i = 0; i < operands.length; i++) {
-      if (typeof operand[i] == "number")
-        sum += operands[i];
-      else
+      result = evaluate(operands[i]);
+      if (typeof result == "number")
+        if (typeof total == "undefined") total = result;  // init total
+        else total = operation(total, result);            // update total
+      else if (typeof result == "undefined" || result == null)
         symbols.push(operands[i]);
+      else
+        symbols.push(result);
+      //console.log("result: " + result +", total: " + total );
     }
-    return [new Literal(sum)].concat(symbols);
+    if (symbols.length > 0) {
+      let totalExpr, ops;
+      if (typeof total == "number") {
+        if (total < 0) {
+          totalExpr = new Unary(new Token("MINUS", "-", null, 0), new Literal(-total));
+        }
+        else {
+          totalExpr = new Literal(total);
+        }
+      }
+      ops = [null, operator, totalExpr].concat(symbols);
+      expr = new (Function.prototype.bind.apply(Binary, ops));
+      //console.log(expr);
+      return expr;
+    }
+    return total;
   }
 }
 // runtime error ############################################

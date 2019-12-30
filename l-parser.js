@@ -2,7 +2,7 @@
 
 const sc = require("./l-scanner.js")
 const Scanner = sc.scanner;
-const Token = sc.token;
+//const Token = sc.token;
 
 const ast = require("./l-ast.js")
 const Binary = ast.binary;
