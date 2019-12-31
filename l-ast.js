@@ -52,9 +52,11 @@ function AstPrinter() {
     res += ")";
     return res;
   }
+  // call visitor functions ######################
   this.print = function(expr) {
     return expr.accept(self);
   }
+  // visitor functions ###########################
   this.visitLiteralExpr = function(expr) {
     return expr.value;
   }

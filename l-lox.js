@@ -20,10 +20,10 @@ function Lox() {
   let printer;
 
   //let source = '2x+3x';
-  //let source = '2x+3x';
+  let source = '(-2x)+4+3x';
   //let source = '1+2+(4+5+x)+3';
   //let source = '1-2-(4-5)-x-3';
-  let source = 'x*-2/3*(4+5)/(6-4)';
+  //let source = 'x*-2/3*(4+5)/(6-4)';
 
   console.log(source);
   let sourceTokens = Scanner(source);
@@ -33,24 +33,32 @@ function Lox() {
   printer = new AstPrinter();
   console.log(printer.print(sourceExpression));
 
-  // let rule = {
-  //   //pattern: ['a*c+b*c', 'c*a+b*c', 'a*c+c*b', 'c*a+c*b'],
-  //   pattern: ['a*c+b*c'],
-  //   rewrite: '(a+b)*c'
-  // }
-  // console.log(rule);
-  // let patternTokens = Scanner(rule.pattern[0]);
-  // //console.log(patternTokens);
-  // let patternExpression = Parser(patternTokens);
-  // rule.patternExpression = patternExpression;
-  // if (!patternExpression) return;
-  // printer = new AstPrinter();
-  // console.log(printer.print(patternExpression));
+  let rule = {
+    //pattern: ['a*c+b*c', 'c*a+b*c', 'a*c+c*b', 'c*a+c*b'],
+    pattern: ['(a*c)+b*c'],
+    rewrite: '(a+b)*c'
+  }
+  console.log(rule);
+  let patternTokens = Scanner(rule.pattern[0]);
+  //console.log(patternTokens);
+  let patternExpression = Parser(patternTokens);
+  rule.patternExpression = patternExpression;
+  if (!patternExpression) return;
+  console.log((new AstPrinter()).print(patternExpression));
 
-  // RuleMatcher(sourceExpression, rule);
+  let rewriteTokens = Scanner(rule.rewrite);
+  //console.log(rewriteTokens);
+  let rewriteExpression = Parser(rewriteTokens);
+  rule.rewriteExpression = rewriteExpression;
+  if (!rewriteExpression) return;
+  console.log((new AstPrinter()).print(rewriteExpression));
+
+  let ruleRewriteEpression = RuleMatcher(sourceExpression, rule);
+  //console.log(ruleRewrite);
+  console.log((new AstPrinter()).print(ruleRewriteEpression));
 
   const interpreter = new Interpreter();
-  const result = interpreter.interpret(sourceExpression);
+  const result = interpreter.interpret(ruleRewriteEpression);
   if (typeof result == "number") console.log(result);
   else console.log((new AstPrinter()).print(result));
 }
